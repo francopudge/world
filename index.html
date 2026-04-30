@@ -311,7 +311,7 @@
     });
 
     const MONSTER_DATA = {
-        "Aesi": { skill: "Sea Wave", img: "aesi.png", desc: "Tiap 5 ronde, damage +10." },
+        "Aesi": { skill: "Sea Wave", img: "aesi.png", desc: "Tiap 5 ronde, lawan otomatis terkena 10 damage." },
         "Alphadios": { skill: "Divine Protection", img: "alphadios.png", desc: "Kurangi damage masuk 5." },
         "Alpharion": { skill: "Guard Breaker", img: "alpharion.png", desc: "Serangan selalu Genap." },
         "Dorballom": { skill: "Abyss Mirror", img: "dorballom.png", desc: "Pantul 5 damage jika lawan Genap." },
@@ -446,9 +446,12 @@
         const defender = turn === 1 ? p2 : p1;
         addLog(`<span style="color:#8b7355">R${round} - [${attacker.name}]</span>`);
 
+        // --- SKILL AESI: OTOMATIS SETIAP RONDE 5 ---
         if (attacker.name === "Aesi" && round % 5 === 0) {
             defender.hp -= 10;
-            addLog(`🌊 Sea Wave! 10 damage.`);
+            addLog(`🌊 <b>Sea Wave!</b> Lawan otomatis terkena 10 damage.`);
+            updateStats();
+            if (checkEnd()) return;
         }
 
         let roll = Math.floor(Math.random() * 20) + 1;
