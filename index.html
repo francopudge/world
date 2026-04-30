@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Dice War</title>
+    <!-- Favicon Icon -->
+    <link rel="icon" type="image/png" href="cover.png">
+    <style>
+        /* CSS TOOLKIT */
+        body {
+            background-color: #121212;
+            color: #e0d5b1;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scroll during loading */
+        }
+
+        /* LOADING SCREEN STYLES */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #121212;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading-screen img {
+            width: 150px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .progress-container {
+            width: 200px;
+            height: 10px;
+            background: #2c231a;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #8b7355;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #d4af37;
+            transition: width 0.1s;
+        }
+
+        #loading-text {
+            margin-top: 10px;
+            font-family: monospace;
+            color: #d4af37;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 800px;
+            background: #1e1a15;
+            border: 4px solid #8b7355;
+            box-shadow: 0 0 20px rgba(0,0,0,0.7);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+            visibility: hidden; /* Hide until loaded */
+        }
+
+        header, footer {
+            background: #2c231a;
+            padding: 15px;
+            border-bottom: 2px solid #8b7355;
+            text-align: center;
+            z-index: 10;
+        }
+
+        header { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; }
+        footer { border-bottom: none; border-top: 2px solid #8b7355; font-size: 0.8em; color: #d4af37; }
+
+        .hidden { display: none !important; }
+
+        /* Rulebook Modal */
+        #rule-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e1a15;
+            border: 3px solid #d4af37;
+            padding: 20px;
+            z-index: 100;
+            width: 70%;
+            max-width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+            box-shadow: 0 0 50px black;
+        }
+        #rule-modal img { 
+            width: 80%; 
+            height: auto; 
+            border: 1px solid #8b7355; 
+            border-radius: 5px; 
+        }
+        .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99; }
+
+        /* Buttons */
+        .btn-small { background: #5a4b3b; color: #d4af37; border: 1px solid #d4af37; padding: 5px 10px; cursor: pointer; font-size: 0.7em; }
+        .btn-back { background: #442222; color: #ff9999; border: 1px solid #ff4444; margin-bottom: 10px; }
+        .mode-btn { margin: 8px; padding: 15px 30px; font-size: 1.1em; background: #5a4b3b; border: 2px solid #d4af37; color: white; cursor: pointer; transition: 0.3s; width: 220px; font-weight: bold;}
+        .mode-btn:hover { background: #d4af37; color: black; }
+
+        /* Cover & Screens */
+        #mode-screen, #setup-screen, #battle-screen { padding: 20px; text-align: center; flex-grow: 1; }
+        .game-cover { 
+            width: 60%; 
+            max-width: 250px; 
+            height: auto; 
+            border-radius: 10px; 
+            border: 2px solid #8b7355; 
+            margin-bottom: 20px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+        }
+
+        /* Monster Selection (Card View) */
+        .monster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .monster-card {
+            background: linear-gradient(135deg, #3e3328 0%, #251f18 100%);
+            border: 2px solid #d4af37;
+            padding: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 5px;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .monster-card:hover:not(.disabled) { transform: scale(1.05); border-color: #fff; }
+        .monster-card.disabled { opacity: 0.5; filter: grayscale(1); }
+        .monster-card.disabled::after { content: "DIPILIH"; position: absolute; top: 40%; left: 0; width: 100%; color: #ff4444; font-weight: bold; transform: rotate(-15deg); text-shadow: 1px 1px 2px black; }
+        
+        .monster-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border: 1px solid #8b7355; margin-bottom: 5px; }
+
+        /* Battle Area (Card View) */
+        .battle-area { display: flex; justify-content: space-around; align-items: flex-start; padding: 15px 5px; background: rgba(0,0,0,0.3); }
+        .player-box { width: 42%; text-align: center; padding: 10px; border-radius: 8px; transition: 0.3s; border: 1px solid transparent; }
+        .active-turn { background: rgba(212, 175, 55, 0.15); border-color: #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+        
+        .monster-card-battle { 
+            width: 100%; 
+            max-width: 120px; 
+            aspect-ratio: 3/4; 
+            border: 3px solid #d4af37; 
+            margin: 0 auto 10px auto; 
+            object-fit: cover;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+        }
+
+        .hp-bar { width: 100%; height: 12px; background: #333; border: 1px solid #000; margin: 5px 0; border-radius: 6px; overflow: hidden; }
+        .hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #933, #f44); transition: width 0.4s ease; }
+
+        /* Battle Skill Text */
+        .battle-skill-info {
+            font-size: 0.65em;
+            color: #d4af37;
+            font-style: italic;
+            margin-top: 5px;
+            min-height: 30px;
+            line-height: 1.2;
+        }
+
+        #battle-log { height: 100px; background: #000; border: 2px inset #8b7355; margin: 10px 15px; padding: 10px; overflow-y: auto; font-size: 0.75em; color: #ccc; text-align: left; line-height: 1.4; }
+        .controls { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: 15px; }
+        
+        button#roll-btn { background: linear-gradient(#8b7355, #5a4b3b); color: white; border: 1px solid #d4af37; padding: 12px 35px; font-size: 1em; cursor: pointer; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
+        .btn-surrender { background: transparent; color: #888; border: none; text-decoration: underline; cursor: pointer; font-size: 0.75em; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+    <img src="cover.png" onerror="this.src='https://via.placeholder.com/150x150?text=WDW'">
+    <div class="progress-container">
+        <div id="progress-bar" class="progress-bar"></div>
+    </div>
+    <div id="loading-text">Memuat 0%</div>
+</div>
+
+<!-- Audio Element -->
+<audio id="bg-music" loop>
+    <source src="運命は君の手に.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
+<div id="overlay" class="overlay hidden" onclick="toggleRules()"></div>
+<div id="rule-modal" class="hidden">
+    <h3>📜 ATURAN PERMAINAN</h3>
+    <img src="rulebook.png" alt="Rulebook" onerror="this.src='https://via.placeholder.com/200x300?text=Rulebook+Small'">
+    <br><br>
+    <button class="btn-small" onclick="toggleRules()">TUTUP</button>
+</div>
+
+<div id="game-container">
+    <header>
+        <button id="music-btn" class="btn-small" onclick="toggleMusic()" style="width: 60px">PLAY ♫</button>
+        <h2 style="margin:0; letter-spacing: 2px; font-size: 1.2em;">WORLD DICE WAR</h2>
+        <button class="btn-small" onclick="toggleRules()" style="width: 60px">RULES</button>
+    </header>
+
+    <!-- 1. MENU UTAMA DENGAN COVER -->
+    <div id="mode-screen">
+        <img src="cover.png" alt="World Dice War Cover" class="game-cover" onerror="this.src='https://via.placeholder.com/200x100?text=WDW+COVER'">
+        <h3>PILIH MODE</h3>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <button class="mode-btn" onclick="selectMode('pvc')">VS COMPUTER</button>
+            <button class="mode-btn" onclick="selectMode('pvp')">MULTIPLAYER (1 HP)</button>
+        </div>
+    </div>
+
+    <!-- 2. PILIH MONSTER -->
+    <div id="setup-screen" class="hidden">
+        <button class="btn-small btn-back" onclick="backToMenu()">← KEMBALI KE MENU</button>
+        <h3 id="setup-title" style="font-size: 1em; color: #d4af37;">PEMAIN 1: PILIH KARTU</h3>
+        <div class="monster-grid" id="monster-selection"></div>
+    </div>
+
+    <!-- 3. LAYAR PERTEMPURAN -->
+    <div id="battle-screen" class="hidden">
+        <div class="battle-area">
+            <!-- Player 1 Card -->
+            <div id="p1-area" class="player-box">
+                <img id="p1-img" class="monster-card-battle" src="" alt="">
+                <h5 id="p1-name" style="margin:2px 0; font-size: 0.9em;">Pemain 1</h5>
+                <div class="hp-bar"><div id="p1-hp-fill" class="hp-fill"></div></div>
+                <small style="font-size: 0.7em;">HP: <span id="p1-hp-text">100</span>/100</small>
+                <div id="p1-skill-info" class="battle-skill-info"></div>
+            </div>
+
+            <div style="margin-top: 50px; font-size: 1.2em; color: #d4af37; font-weight: bold; text-shadow: 0 0 10px black;">VS</div>
+
+            <!-- Player 2 Card -->
+            <div id="p2-area" class="player-box">
+                <img id="p2-img" class="monster-card-battle" src="" alt="">
+                <h5 id="p2-name" style="margin:2px 0; font-size: 0.9em;">Pemain 2</h5>
+                <div class="hp-bar"><div id="p2-hp-fill" class="hp-fill"></div></div>
+                <small style="font-size: 0.7em;">HP: <span id="p2-hp-text">100</span>/100</small>
+                <div id="p2-skill-info" class="battle-skill-info"></div>
+            </div>
+        </div>
+
+        <div id="battle-log"></div>
+
+        <div class="controls">
+            <button id="roll-btn">LEMPAR DADU</button>
+            <button id="reset-btn" class="hidden" onclick="location.reload()" style="background:#d4af37; color:black; padding:12px 35px; border:none; font-weight:bold; cursor:pointer">MAIN LAGI</button>
+            <button id="surrender-btn" class="btn-surrender" onclick="confirmSurrender()">Menyerah & Menu Utama</button>
+        </div>
+    </div>
+
+    <footer>
+        STRATEGI • KEBERUNTUNGAN • KEMENANGAN
+    </footer>
+</div>
+
+<script>
+    // --- LOADING LOGIC ---
+    window.addEventListener('load', () => {
+        let progress = 0;
+        const progressBar = document.getElementById('progress-bar');
+        const loadingText = document.getElementById('loading-text');
+        const loadingScreen = document.getElementById('loading-screen');
+        const gameContainer = document.getElementById('game-container');
+
+        const interval = setInterval(() => {
+            progress += Math.floor(Math.random() * 10) + 1; // Random speed
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                setTimeout(() => {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        gameContainer.style.visibility = 'visible';
+                        document.body.style.overflow = 'auto';
+                    }, 500);
+                }, 500);
+            }
+            progressBar.style.width = progress + '%';
+            loadingText.innerText = `Memuat ${progress}%`;
+        }, 100);
+    });
+
+    const MONSTER_DATA = {
+        "Aesi": { skill: "Sea Wave", img: "aesi.png", desc: "Tiap 5 ronde, damage +10." },
+        "Alphadios": { skill: "Divine Protection", img: "alphadios.png", desc: "Kurangi damage masuk 5." },
+        "Alpharion": { skill: "Guard Breaker", img: "alpharion.png", desc: "Serangan selalu Genap." },
+        "Dorballom": { skill: "Abyss Mirror", img: "dorballom.png", desc: "Pantul 5 damage jika lawan Genap." },
+        "Grist": { skill: "Leaf Life", img: "grist.png", desc: "Serap 5 HP jika lawan Ganjil." },
+        "Plague": { skill: "Krawler", img: "plague.png", desc: "Musuh lempar >= 10? Kena 5 damage." },
+        "Quake": { skill: "Desolation Gaze", img: "quake.png", desc: "Musuh ambil dadu terendah." }
+    };
+
+    let gameMode = '';
+    let p1 = null, p2 = null;
+    let round = 1;
+    let turn = 1;
+
+    // Music Control
+    const bgMusic = document.getElementById('bg-music');
+    const musicBtn = document.getElementById('music-btn');
+
+    function toggleMusic() {
+        if (bgMusic.paused) {
+            bgMusic.play();
+            musicBtn.innerText = "PAUSE ⏸";
+        } else {
+            bgMusic.pause();
+            musicBtn.innerText = "PLAY ♫";
+        }
+    }
+
+    function toggleRules() {
+        document.getElementById('rule-modal').classList.toggle('hidden');
+        document.getElementById('overlay').classList.toggle('hidden');
+    }
+
+    function selectMode(mode) {
+        gameMode = mode;
+        document.getElementById('mode-screen').classList.add('hidden');
+        document.getElementById('setup-screen').classList.remove('hidden');
+        p1 = null; p2 = null;
+        document.getElementById('setup-title').innerText = "PEMAIN 1: PILIH KARTU";
+        renderSelection();
+    }
+
+    function backToMenu() {
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('mode-screen').classList.remove('hidden');
+    }
+
+    function confirmSurrender() {
+        if(confirm("Kembali ke menu utama? Progres duel akan hilang.")) {
+            location.reload();
+        }
+    }
+
+    function renderSelection() {
+        const grid = document.getElementById('monster-selection');
+        grid.innerHTML = '';
+        Object.keys(MONSTER_DATA).forEach(name => {
+            const card = document.createElement('div');
+            card.className = 'monster-card';
+            if (p1 && p1.name === name) card.classList.add('disabled');
+            
+            card.innerHTML = `
+                <img src="${MONSTER_DATA[name].img}" onerror="this.src='https://via.placeholder.com/150x200?text=${name}'">
+                <div style="font-size: 0.85em; font-weight: bold; color: #d4af37;">${name}</div>
+                <div style="font-size: 0.65em; color: #ccc; min-height: 30px; margin-top: 3px;">${MONSTER_DATA[name].desc}</div>
+            `;
+            if (!card.classList.contains('disabled')) {
+                card.onclick = () => pickMonster(name);
+            }
+            grid.appendChild(card);
+        });
+    }
+
+    function pickMonster(name) {
+        if (!p1) {
+            p1 = { name, hp: 100, ...MONSTER_DATA[name] };
+            if (gameMode === 'pvp') {
+                document.getElementById('setup-title').innerText = "PEMAIN 2: PILIH KARTU";
+                renderSelection();
+            } else {
+                const available = Object.keys(MONSTER_DATA).filter(n => n !== p1.name);
+                const cpuName = available[Math.floor(Math.random() * available.length)];
+                p2 = { name: cpuName, hp: 100, ...MONSTER_DATA[cpuName] };
+                startBattle();
+            }
+        } else if (gameMode === 'pvp' && !p2) {
+            p2 = { name, hp: 100, ...MONSTER_DATA[name] };
+            startBattle();
+        }
+    }
+
+    function startBattle() {
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('battle-screen').classList.remove('hidden');
+        document.getElementById('p1-name').innerText = p1.name;
+        document.getElementById('p1-img').src = p1.img;
+        document.getElementById('p1-skill-info').innerHTML = `<b>Skill:</b> ${p1.skill}<br>${p1.desc}`;
+        
+        document.getElementById('p2-name').innerText = p2.name;
+        document.getElementById('p2-img').src = p2.img;
+        document.getElementById('p2-skill-info').innerHTML = `<b>Skill:</b> ${p2.skill}<br>${p2.desc}`;
+        
+        document.getElementById('battle-log').innerHTML = '';
+        round = 1; turn = 1;
+        updateTurnUI();
+        addLog(`Duel dimulai! <b>${p1.name}</b> vs <b>${p2.name}</b>`);
+    }
+
+    function addLog(msg) {
+        const log = document.getElementById('battle-log');
+        log.innerHTML += `<div>${msg}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function updateTurnUI() {
+        document.getElementById('p1-area').classList.toggle('active-turn', turn === 1);
+        document.getElementById('p2-area').classList.toggle('active-turn', turn === 2);
+        const btn = document.getElementById('roll-btn');
+        if (gameMode === 'pvc' && turn === 2) {
+            btn.disabled = true;
+            btn.innerText = "CPU BERFIKIR...";
+            setTimeout(executeTurn, 1000);
+        } else {
+            btn.disabled = false;
+            btn.innerText = `GILIRAN ${turn === 1 ? 'P1' : 'P2'} (ROLL)`;
+        }
+    }
+
+    document.getElementById('roll-btn').onclick = executeTurn;
+
+    function executeTurn() {
+        const attacker = turn === 1 ? p1 : p2;
+        const defender = turn === 1 ? p2 : p1;
+        addLog(`<span style="color:#8b7355">R${round} - [${attacker.name}]</span>`);
+
+        if (attacker.name === "Aesi" && round % 5 === 0) {
+            defender.hp -= 10;
+            addLog(`🌊 Sea Wave! 10 damage.`);
+        }
+
+        let roll = Math.floor(Math.random() * 20) + 1;
+        if (defender.name === "Quake") {
+            let roll2 = Math.floor(Math.random() * 20) + 1;
+            roll = Math.min(roll, roll2);
+            addLog(`👁️ Quake: Ambil terendah (${roll})`);
+        }
+        if (attacker.name === "Alpharion" && roll % 2 !== 0) {
+            roll = Math.min(20, roll + 1);
+            addLog(`⚔️ Guard Breaker: Jadi Genap.`);
+        }
+
+        addLog(`${attacker.name} Lempar: <b>${roll}</b>`);
+        let damage = roll;
+
+        if (defender.name === "Alphadios") { damage = Math.max(0, damage - 5); addLog(`🛡️ Serap 5 dmg.`); }
+        if (defender.name === "Dorballom" && roll % 2 === 0) { damage = 0; attacker.hp -= 5; addLog(`🔮 Pantul 5 dmg!`); }
+        if (defender.name === "Grist" && roll % 2 !== 0) { defender.hp = Math.min(100, defender.hp + 5); attacker.hp -= 5; addLog(`🌿 Sedot 5 HP!`); }
+        if (defender.name === "Plague" && roll >= 10) { attacker.hp -= 5; addLog(`🦠 Infeksi: 5 dmg.`); }
+
+        defender.hp -= damage;
+        updateStats();
+        if (checkEnd()) return;
+        if (turn === 2) round++;
+        turn = turn === 1 ? 2 : 1;
+        updateTurnUI();
+    }
+
+    function updateStats() {
+        document.getElementById('p1-hp-text').innerText = Math.max(0, p1.hp);
+        document.getElementById('p2-hp-text').innerText = Math.max(0, p2.hp);
+        document.getElementById('p1-hp-fill').style.width = Math.max(0, p1.hp) + "%";
+        document.getElementById('p2-hp-fill').style.width = Math.max(0, p2.hp) + "%";
+    }
+
+    function checkEnd() {
+        if (p1.hp <= 0 || p2.hp <= 0) {
+            const winner = p1.hp > 0 ? p1.name : p2.name;
+            addLog(`<h3 style="color:#d4af37">🏆 ${winner} MENANG!</h3>`);
+            document.getElementById('roll-btn').classList.add('hidden');
+            document.getElementById('surrender-btn').classList.add('hidden');
+            document.getElementById('reset-btn').classList.remove('hidden');
+            return true;
+        }
+        return false;
+    }
+</script>
+</body>
+</html>
