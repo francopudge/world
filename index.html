@@ -314,7 +314,7 @@
         "Aesi": { skill: "Sea Wave", img: "aesi.png", desc: "Tiap 5 ronde, lawan otomatis terkena 10 damage." },
         "Alphadios": { skill: "Divine Protection", img: "alphadios.png", desc: "Kurangi damage masuk 5." },
         "Alpharion": { skill: "Guard Breaker", img: "alpharion.png", desc: "Serangan selalu Genap." },
-        "Dorballom": { skill: "Abyss Mirror", img: "dorballom.png", desc: "Pantul 5 damage jika lawan Genap." },
+        "Dorballom": { skill: "Abyss Mirror", img: "dorballom.png", desc: "Jika musuh dapat angka genap, musuh tersebut kena 5 damage." },
         "Grist": { skill: "Leaf Life", img: "grist.png", desc: "Serap 5 HP jika lawan Ganjil." },
         "Plague": { skill: "Krawler", img: "plague.png", desc: "Musuh lempar >= 10? Kena 5 damage." },
         "Quake": { skill: "Desolation Gaze", img: "quake.png", desc: "Musuh ambil dadu terendah." }
@@ -468,10 +468,28 @@
         addLog(`${attacker.name} Lempar: <b>${roll}</b>`);
         let damage = roll;
 
-        if (defender.name === "Alphadios") { damage = Math.max(0, damage - 5); addLog(`🛡️ Serap 5 dmg.`); }
-        if (defender.name === "Dorballom" && roll % 2 === 0) { damage = 0; attacker.hp -= 5; addLog(`🔮 Pantul 5 dmg!`); }
-        if (defender.name === "Grist" && roll % 2 !== 0) { defender.hp = Math.min(100, defender.hp + 5); attacker.hp -= 5; addLog(`🌿 Sedot 5 HP!`); }
-        if (defender.name === "Plague" && roll >= 10) { attacker.hp -= 5; addLog(`🦠 Infeksi: 5 dmg.`); }
+        // LOGIKA SKILL DEFENDER
+        if (defender.name === "Alphadios") { 
+            damage = Math.max(0, damage - 5); 
+            addLog(`🛡️ Serap 5 dmg.`); 
+        }
+        
+        // Logika Dorballom (ABYSS MIRROR): Angka genap tetap masuk, tapi musuh kena 5 damage
+        if (defender.name === "Dorballom" && roll % 2 === 0) { 
+            attacker.hp -= 5; 
+            addLog(`🔮 <b>Abyss Mirror!</b> Musuh dapat genap, kena 5 damage tambahan.`); 
+        }
+
+        if (defender.name === "Grist" && roll % 2 !== 0) { 
+            defender.hp = Math.min(100, defender.hp + 5); 
+            attacker.hp -= 5; 
+            addLog(`🌿 Sedot 5 HP!`); 
+        }
+        
+        if (defender.name === "Plague" && roll >= 10) { 
+            attacker.hp -= 5; 
+            addLog(`🦠 Infeksi: 5 dmg.`); 
+        }
 
         defender.hp -= damage;
         updateStats();
