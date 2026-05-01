@@ -234,10 +234,12 @@
             border-color: #fff;
             box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5), inset 0 0 15px rgba(212, 175, 55, 0.2);
         }
+        
+        /* NEW: DIPILIH Overlay Style */
         .monster-card.disabled {
-            opacity: 0.5;
-            filter: grayscale(1);
-            border-color: #ff6666;
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
         }
         .monster-card.disabled::after {
             content: "DIPILIH";
@@ -245,11 +247,14 @@
             top: 40%;
             left: 0;
             width: 100%;
-            color: #ff4444;
-            font-weight: bold;
-            transform: rotate(-15deg);
-            text-shadow: 1px 1px 2px black, 0 0 10px rgba(255, 68, 68, 0.8);
-            font-size: 1.1em;
+            color: #ffcc00;
+            font-weight: 900;
+            font-size: 1.4em;
+            text-shadow: 2px 2px 5px #000, 0 0 10px #000;
+            transform: rotate(-20deg);
+            pointer-events: none;
+            letter-spacing: 2px;
+            z-index: 5;
         }
         
         .monster-card img {
@@ -276,7 +281,29 @@
             border: 2px solid #444;
             background: rgba(0,0,0,0.3);
             box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            position: relative; /* For the 'Kalah' label */
         }
+        
+        /* NEW: KALAH Label Style */
+        .player-box.defeated::before {
+            content: "KALAH";
+            position: absolute;
+            top: 30%;
+            left: 0;
+            width: 100%;
+            color: #ff3333;
+            font-weight: 900;
+            font-size: 1.8em;
+            text-shadow: 2px 2px 5px #000;
+            transform: rotate(-15deg);
+            z-index: 15;
+            pointer-events: none;
+            letter-spacing: 3px;
+        }
+        .player-box.defeated img {
+            filter: grayscale(1) brightness(0.5);
+        }
+
         .active-turn {
             background: rgba(212, 175, 55, 0.2);
             border-color: #d4af37;
@@ -570,13 +597,18 @@
         Object.keys(MONSTER_DATA).forEach(name => {
             const card = document.createElement('div');
             card.className = 'monster-card';
-            if (p1 && p1.name === name) card.classList.add('disabled');
+            
+            // CEK JIKA SUDAH DIPILIH P1
+            if (p1 && p1.name === name) {
+                card.classList.add('disabled');
+            }
             
             card.innerHTML = `
                 <img src="${MONSTER_DATA[name].img}" onerror="this.src='https://via.placeholder.com/150x200?text=${name}'">
                 <div style="font-size: 0.85em; font-weight: bold; color: #d4af37;">${name}</div>
                 <div style="font-size: 0.65em; color: #ccc; min-height: 30px; margin-top: 3px;">${MONSTER_DATA[name].desc}</div>
             `;
+            
             if (!card.classList.contains('disabled')) {
                 card.onclick = () => pickMonster(name);
             }
@@ -612,6 +644,10 @@
         document.getElementById('p2-name').innerText = p2.name;
         document.getElementById('p2-img').src = p2.img;
         document.getElementById('p2-skill-info').innerHTML = `<b>Skill:</b> ${p2.skill}<br>${p2.desc}`;
+        
+        // Reset classes
+        document.getElementById('p1-area').classList.remove('defeated');
+        document.getElementById('p2-area').classList.remove('defeated');
         
         document.getElementById('battle-log').innerHTML = '';
         round = 1; turn = 1;
@@ -674,7 +710,6 @@
             addLog(`🛡️ Serap 5 dmg.`); 
         }
         
-        // Logika Dorballom (ABYSS MIRROR): Angka genap tetap masuk, tapi musuh kena 5 damage
         if (defender.name === "Dorballom" && roll % 2 === 0) { 
             attacker.hp -= 5; 
             addLog(`🔮 <b>Abyss Mirror!</b> Musuh dapat genap, kena 5 damage tambahan.`); 
@@ -704,12 +739,21 @@
         document.getElementById('p2-hp-text').innerText = Math.max(0, p2.hp);
         document.getElementById('p1-hp-fill').style.width = Math.max(0, p1.hp) + "%";
         document.getElementById('p2-hp-fill').style.width = Math.max(0, p2.hp) + "%";
+        
+        // CEK VISUAL KALAH SAAT STATS UPDATE
+        if (p1.hp <= 0) document.getElementById('p1-area').classList.add('defeated');
+        if (p2.hp <= 0) document.getElementById('p2-area').classList.add('defeated');
     }
 
     function checkEnd() {
         if (p1.hp <= 0 || p2.hp <= 0) {
             const winner = p1.hp > 0 ? p1.name : p2.name;
             addLog(`<h3 style="color:#d4af37">🏆 ${winner} MENANG!</h3>`);
+            
+            // Hapus status active turn agar glow hilang
+            document.getElementById('p1-area').classList.remove('active-turn');
+            document.getElementById('p2-area').classList.remove('active-turn');
+            
             document.getElementById('roll-btn').classList.add('hidden');
             document.getElementById('surrender-btn').classList.add('hidden');
             document.getElementById('reset-btn').classList.remove('hidden');
