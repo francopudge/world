@@ -40,29 +40,57 @@
             width: 150px;
             margin-bottom: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 0 0 40px rgba(212, 175, 55, 0.2);
+            animation: pulse-glow 2s ease-in-out infinite, float-img 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 0 0 40px rgba(212, 175, 55, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.6), 0 0 80px rgba(212, 175, 55, 0.4); }
+        }
+
+        @keyframes float-img {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
         }
 
         .progress-container {
-            width: 200px;
-            height: 10px;
+            width: 250px;
+            height: 15px;
             background: #2c231a;
-            border-radius: 5px;
+            border-radius: 10px;
             overflow: hidden;
-            border: 1px solid #8b7355;
+            border: 2px solid #8b7355;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
         }
 
         .progress-bar {
             width: 0%;
             height: 100%;
-            background: #d4af37;
+            background: linear-gradient(90deg, #d4af37, #f4d03f, #d4af37);
             transition: width 0.1s;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.8);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% center; }
+            50% { background-position: 100% center; }
         }
 
         #loading-text {
-            margin-top: 10px;
+            margin-top: 15px;
             font-family: monospace;
             color: #d4af37;
+            font-size: 1.1em;
+            font-weight: bold;
+            animation: text-glow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes text-glow {
+            0%, 100% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.5); color: #d4af37; }
+            50% { text-shadow: 0 0 15px rgba(212, 175, 55, 1); color: #f4d03f; }
         }
 
         #game-container {
@@ -120,19 +148,66 @@
         /* Buttons */
         .btn-small { background: #5a4b3b; color: #d4af37; border: 1px solid #d4af37; padding: 5px 10px; cursor: pointer; font-size: 0.7em; }
         .btn-back { background: #442222; color: #ff9999; border: 1px solid #ff4444; margin-bottom: 10px; }
-        .mode-btn { margin: 8px; padding: 15px 30px; font-size: 1.1em; background: #5a4b3b; border: 2px solid #d4af37; color: white; cursor: pointer; transition: 0.3s; width: 220px; font-weight: bold;}
-        .mode-btn:hover { background: #d4af37; color: black; }
+        .mode-btn {
+            margin: 15px;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #5a4b3b, #3e3328);
+            border: 2px solid #d4af37;
+            color: #d4af37;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 220px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        .mode-btn:hover {
+            background: linear-gradient(135deg, #d4af37, #f4d03f);
+            color: #000;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+            transform: translateY(-3px);
+        }
+        .mode-btn:active {
+            transform: translateY(-1px);
+        }
+        .mode-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.2);
+            transition: left 0.3s;
+        }
+        .mode-btn:hover::before {
+            left: 100%;
+        }
 
         /* Cover & Screens */
         #mode-screen, #setup-screen, #battle-screen { padding: 20px; text-align: center; flex-grow: 1; }
-        .game-cover { 
-            width: 60%; 
-            max-width: 250px; 
-            height: auto; 
-            border-radius: 10px; 
-            border: 2px solid #8b7355; 
-            margin-bottom: 20px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+        .game-cover {
+            width: 60%;
+            max-width: 250px;
+            height: auto;
+            border-radius: 10px;
+            border: 3px solid #d4af37;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.7), 0 0 30px rgba(212, 175, 55, 0.4);
+            transition: 0.4s;
+            animation: cover-float 4s ease-in-out infinite;
+        }
+        .game-cover:hover {
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.8), 0 0 50px rgba(212, 175, 55, 0.6);
+        }
+        @keyframes cover-float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
         }
 
         /* Monster Selection (Card View) */
@@ -145,38 +220,116 @@
 
         .monster-card {
             background: linear-gradient(135deg, #3e3328 0%, #251f18 100%);
-            border: 2px solid #d4af37;
+            border: 3px solid #d4af37;
             padding: 8px;
             cursor: pointer;
-            transition: 0.2s;
-            border-radius: 5px;
+            transition: 0.3s;
+            border-radius: 8px;
             position: relative;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 10px rgba(212, 175, 55, 0.1);
         }
 
-        .monster-card:hover:not(.disabled) { transform: scale(1.05); border-color: #fff; }
-        .monster-card.disabled { opacity: 0.5; filter: grayscale(1); }
-        .monster-card.disabled::after { content: "DIPILIH"; position: absolute; top: 40%; left: 0; width: 100%; color: #ff4444; font-weight: bold; transform: rotate(-15deg); text-shadow: 1px 1px 2px black; }
+        .monster-card:hover:not(.disabled) {
+            transform: scale(1.08) translateY(-5px);
+            border-color: #fff;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5), inset 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+        .monster-card.disabled {
+            opacity: 0.5;
+            filter: grayscale(1);
+            border-color: #ff6666;
+        }
+        .monster-card.disabled::after {
+            content: "DIPILIH";
+            position: absolute;
+            top: 40%;
+            left: 0;
+            width: 100%;
+            color: #ff4444;
+            font-weight: bold;
+            transform: rotate(-15deg);
+            text-shadow: 1px 1px 2px black, 0 0 10px rgba(255, 68, 68, 0.8);
+            font-size: 1.1em;
+        }
         
-        .monster-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border: 1px solid #8b7355; margin-bottom: 5px; }
+        .monster-card img {
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            border: 1px solid #8b7355;
+            margin-bottom: 5px;
+            transition: 0.3s;
+            filter: brightness(0.9);
+        }
+        .monster-card:hover:not(.disabled) img {
+            filter: brightness(1.1);
+        }
 
         /* Battle Area (Card View) */
         .battle-area { display: flex; justify-content: space-around; align-items: flex-start; padding: 15px 5px; background: rgba(0,0,0,0.3); }
-        .player-box { width: 42%; text-align: center; padding: 10px; border-radius: 8px; transition: 0.3s; border: 1px solid transparent; }
-        .active-turn { background: rgba(212, 175, 55, 0.15); border-color: #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+        .player-box {
+            width: 42%;
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            transition: 0.3s;
+            border: 2px solid #444;
+            background: rgba(0,0,0,0.3);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .active-turn {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: #d4af37;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(212, 175, 55, 0.15);
+            animation: glow-pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(212, 175, 55, 0.15); }
+            50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.8), inset 0 0 15px rgba(212, 175, 55, 0.25); }
+        }
         
-        .monster-card-battle { 
-            width: 100%; 
-            max-width: 120px; 
-            aspect-ratio: 3/4; 
-            border: 3px solid #d4af37; 
-            margin: 0 auto 10px auto; 
+        .monster-card-battle {
+            width: 100%;
+            max-width: 120px;
+            aspect-ratio: 3/4;
+            border: 3px solid #d4af37;
+            margin: 0 auto 10px auto;
             object-fit: cover;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8), 0 0 15px rgba(212, 175, 55, 0.4);
+            transition: 0.3s;
+            filter: brightness(1);
+        }
+        .active-turn .monster-card-battle {
+            animation: card-pulse 1s ease-in-out infinite;
+        }
+        @keyframes card-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
-        .hp-bar { width: 100%; height: 12px; background: #333; border: 1px solid #000; margin: 5px 0; border-radius: 6px; overflow: hidden; }
-        .hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #933, #f44); transition: width 0.4s ease; }
+        .hp-bar {
+            width: 100%;
+            height: 18px;
+            background: #1a1a1a;
+            border: 2px solid #8b7355;
+            margin: 8px 0;
+            border-radius: 9px;
+            overflow: hidden;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+        }
+        .hp-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff3333, #ff9999, #ff3333);
+            transition: width 0.4s ease;
+            box-shadow: inset 0 0 5px rgba(255, 51, 51, 0.5), 0 0 10px rgba(255, 51, 51, 0.3);
+            background-size: 200% 100%;
+            animation: hp-shimmer 2s infinite;
+        }
+        @keyframes hp-shimmer {
+            0%, 100% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+        }
 
         /* Battle Skill Text */
         .battle-skill-info {
@@ -188,10 +341,57 @@
             line-height: 1.2;
         }
 
-        #battle-log { height: 100px; background: #000; border: 2px inset #8b7355; margin: 10px 15px; padding: 10px; overflow-y: auto; font-size: 0.75em; color: #ccc; text-align: left; line-height: 1.4; }
+        #battle-log {
+            height: 120px;
+            background: #0a0a0a;
+            border: 2px solid #8b7355;
+            margin: 10px 15px;
+            padding: 12px;
+            overflow-y: auto;
+            font-size: 0.75em;
+            color: #ccc;
+            text-align: left;
+            line-height: 1.5;
+            border-radius: 5px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+        }
+        #battle-log div {
+            animation: log-appear 0.3s ease-in;
+        }
+        @keyframes log-appear {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
         .controls { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: 15px; }
         
-        button#roll-btn { background: linear-gradient(#8b7355, #5a4b3b); color: white; border: 1px solid #d4af37; padding: 12px 35px; font-size: 1em; cursor: pointer; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
+        button#roll-btn {
+            background: linear-gradient(135deg, #d4af37, #f4d03f);
+            color: #000;
+            border: 2px solid #d4af37;
+            padding: 14px 40px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+            transition: 0.3s;
+        }
+        button#roll-btn:hover {
+            background: linear-gradient(135deg, #f4d03f, #fff);
+            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.8);
+            transform: translateY(-2px);
+        }
+        button#roll-btn:active {
+            transform: translateY(0);
+        }
+        button#roll-btn:disabled {
+            background: linear-gradient(135deg, #666, #444);
+            color: #999;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
         .btn-surrender { background: transparent; color: #888; border: none; text-decoration: underline; cursor: pointer; font-size: 0.75em; margin-top: 5px; }
     </style>
 </head>
@@ -233,7 +433,7 @@
         <h3>PILIH MODE</h3>
         <div style="display: flex; flex-direction: column; align-items: center;">
             <button class="mode-btn" onclick="selectMode('pvc')">VS COMPUTER</button>
-            <button class="mode-btn" onclick="selectMode('pvp')">MULTIPLAYER </button>
+            <button class="mode-btn" onclick="selectMode('pvp')">MULTIPLAYER</button>
         </div>
     </div>
 
